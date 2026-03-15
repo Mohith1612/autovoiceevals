@@ -90,8 +90,10 @@ class Config:
     conversation: ConversationConfig
     llm: LLMConfig
     output: OutputConfig
+    provider: str = "vapi"         # "vapi" or "smallest"
     anthropic_api_key: str = ""
     vapi_api_key: str = ""
+    smallest_api_key: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -112,13 +114,22 @@ def load_config(path: str | None = None) -> Config:
     with open(cfg_path) as f:
         raw = yaml.safe_load(f) or {}
 
+    # --- Provider ---
+    provider = raw.get("provider", "vapi")
+    if provider not in ("vapi", "smallest"):
+        raise ValueError(f"Unknown provider: {provider}. Must be 'vapi' or 'smallest'.")
+
     # --- API keys (from env only, never from YAML) ---
     anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
     vapi_key = os.environ.get("VAPI_API_KEY", "")
+    smallest_key = os.environ.get("SMALLEST_API_KEY", "")
+
     if not anthropic_key:
         raise ValueError("ANTHROPIC_API_KEY not set in .env or environment")
-    if not vapi_key:
+    if provider == "vapi" and not vapi_key:
         raise ValueError("VAPI_API_KEY not set in .env or environment")
+    if provider == "smallest" and not smallest_key:
+        raise ValueError("SMALLEST_API_KEY not set in .env or environment")
 
     # --- Assistant (required) ---
     ast = raw.get("assistant", {})
@@ -180,6 +191,8 @@ def load_config(path: str | None = None) -> Config:
             save_transcripts=out.get("save_transcripts", True),
             graphs=out.get("graphs", True),
         ),
+        provider=provider,
         anthropic_api_key=anthropic_key,
         vapi_api_key=vapi_key,
+        smallest_api_key=smallest_key,
     )
