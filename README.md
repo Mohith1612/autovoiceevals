@@ -1,6 +1,6 @@
 # autovoiceevals
 
-Autonomous prompt optimization for voice AI agents. Adapted from Karpathy's [autoresearch](https://github.com/karpathy/autoresearch) pattern.
+A self-improving loop for voice AI agents. Adapted from Karpathy's [autoresearch](https://github.com/karpathy/autoresearch) pattern.
 
 Give it a [Vapi](https://vapi.ai) assistant and two API keys. It generates adversarial callers, attacks the agent, proposes prompt improvements one at a time, keeps what works, reverts what doesn't. Run it overnight, wake up to a better agent.
 
