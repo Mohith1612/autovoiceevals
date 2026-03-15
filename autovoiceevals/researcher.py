@@ -1,10 +1,7 @@
 """Autoresearch loop.
 
-Karpathy's autoresearch pattern applied to voice AI prompt optimization:
-one artifact (system prompt), one metric (composite score),
+One artifact (system prompt), one metric (composite score),
 keep/revert binary decision, runs forever.
-
-See program.md for the full protocol.
 """
 
 from __future__ import annotations

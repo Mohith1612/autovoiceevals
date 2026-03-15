@@ -1,6 +1,6 @@
 # autovoiceevals
 
-A self-improving loop for voice AI agents. Adapted from Karpathy's [autoresearch](https://github.com/karpathy/autoresearch) pattern.
+A self-improving loop for voice AI agents. Inspired by the keep/revert pattern from [karpathy/autoresearch](https://github.com/karpathy/autoresearch).
 
 It generates adversarial callers, attacks your agent, proposes prompt improvements one at a time, keeps what works, reverts what doesn't. Run it overnight, wake up to a better agent.
 
@@ -230,7 +230,6 @@ autovoiceevals/
 ├── main.py                       Entry point
 ├── config.yaml                   Configuration (edit this)
 ├── .env.example                  API key template (copy to .env)
-├── program.md                    Autoresearch protocol doc
 └── autovoiceevals/               Core package
     ├── cli.py                    CLI (research | pipeline subcommands)
     ├── config.py                 Config loading + validation
