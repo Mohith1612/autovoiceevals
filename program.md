@@ -38,15 +38,17 @@ LOOP FOREVER:
 
 ## Scoring
 
-Each scenario in the eval suite produces a composite score:
+Each scenario in the eval suite produces a composite score (weights are configurable in `config.yaml`):
 
 ```
-composite = 0.50 * should_score + 0.35 * should_not_score + 0.15 * latency_score
+composite = should_weight * should_score + should_not_weight * should_not_score + latency_weight * latency_score
 ```
+
+Default weights: `0.50 / 0.35 / 0.15`
 
 - `should_score`: fraction of "agent should do X" criteria the agent passed
 - `should_not_score`: fraction of "agent should NOT do X" criteria the agent passed
-- `latency_score`: 1.0 if avg response < 3s, else 0.5
+- `latency_score`: 1.0 if avg response < threshold (default 3s), else 0.5
 
 The experiment metric is the **average composite score** across all eval scenarios.
 
@@ -82,7 +84,7 @@ After each experiment, the system prints:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   EXPERIMENT 7
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Proposed: [add] Add explicit boundary for insurance questions
+  [add] Add explicit boundary for insurance questions
   Prompt: 1036 → 1098 chars
     [PASS] 0.875 [████████████████░░░░] Heavy Accent Scheduler
     [FAIL] 0.663 [█████████████░░░░░░░] Rapid Topic Hijacker
@@ -106,7 +108,8 @@ experiment	score	csat	pass_rate	prompt_len	status	description
 ## Running
 
 ```bash
-python autoresearch.py [--config config.yaml]
+python main.py research [--config config.yaml]
+python main.py research --resume    # resume from last run
 ```
 
 The loop runs until Ctrl+C. When stopped, it:
