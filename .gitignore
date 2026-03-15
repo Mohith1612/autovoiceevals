@@ -5,3 +5,8 @@ __pycache__/
 results/
 .DS_Store
 writeup_graphs/
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+.ruff_cache/
