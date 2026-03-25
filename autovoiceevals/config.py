@@ -83,6 +83,16 @@ class OutputConfig:
     graphs: bool = True
 
 
+@dataclass
+class LiveKitConfig:
+    url: str = ""
+    room_prefix: str = "eval"
+    data_topic: str = "text"
+    response_timeout: float = 30.0
+    agent_join_timeout: float = 30.0
+    agent_backend: str = "none"    # "smallest" or "none"
+
+
 # ---------------------------------------------------------------------------
 # Top-level config
 # ---------------------------------------------------------------------------
@@ -96,11 +106,14 @@ class Config:
     conversation: ConversationConfig
     llm: LLMConfig
     output: OutputConfig
-    provider: str = "vapi"         # "vapi", "smallest", or "elevenlabs"
+    livekit: LiveKitConfig = None
+    provider: str = "vapi"         # "vapi", "smallest", "elevenlabs", or "livekit"
     anthropic_api_key: str = ""
     vapi_api_key: str = ""
     smallest_api_key: str = ""
     elevenlabs_api_key: str = ""
+    livekit_api_key: str = ""
+    livekit_api_secret: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -123,14 +136,18 @@ def load_config(path: str | None = None) -> Config:
 
     # --- Provider ---
     provider = raw.get("provider", "vapi")
-    if provider not in ("vapi", "smallest", "elevenlabs"):
-        raise ValueError(f"Unknown provider: {provider}. Must be 'vapi', 'smallest', or 'elevenlabs'.")
+    if provider not in ("vapi", "smallest", "elevenlabs", "livekit"):
+        raise ValueError(
+            f"Unknown provider: {provider}. Must be 'vapi', 'smallest', 'elevenlabs', or 'livekit'."
+        )
 
     # --- API keys (from env only, never from YAML) ---
     anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
     vapi_key = os.environ.get("VAPI_API_KEY", "")
     smallest_key = os.environ.get("SMALLEST_API_KEY", "")
     elevenlabs_key = os.environ.get("ELEVENLABS_API_KEY", "")
+    livekit_api_key = os.environ.get("LIVEKIT_API_KEY", "")
+    livekit_api_secret = os.environ.get("LIVEKIT_API_SECRET", "")
 
     if not anthropic_key:
         raise ValueError("ANTHROPIC_API_KEY not set in .env or environment")
@@ -140,6 +157,11 @@ def load_config(path: str | None = None) -> Config:
         raise ValueError("SMALLEST_API_KEY not set in .env or environment")
     if provider == "elevenlabs" and not elevenlabs_key:
         raise ValueError("ELEVENLABS_API_KEY not set in .env or environment")
+    if provider == "livekit":
+        if not livekit_api_key:
+            raise ValueError("LIVEKIT_API_KEY not set in .env or environment")
+        if not livekit_api_secret:
+            raise ValueError("LIVEKIT_API_SECRET not set in .env or environment")
 
     # --- Assistant (required) ---
     ast = raw.get("assistant", {})
@@ -169,6 +191,23 @@ def load_config(path: str | None = None) -> Config:
     cv = raw.get("conversation", {})
     lm = raw.get("llm", {})
     out = raw.get("output", {})
+    lk = raw.get("livekit", {})
+
+    # --- LiveKit section (required if provider == "livekit") ---
+    livekit_url = lk.get("url", os.environ.get("LIVEKIT_URL", ""))
+    if provider == "livekit" and not livekit_url:
+        raise ValueError(
+            "livekit.url is required when provider is 'livekit'. "
+            "Set it in config.yaml or LIVEKIT_URL in .env."
+        )
+    livekit_cfg = LiveKitConfig(
+        url=livekit_url,
+        room_prefix=lk.get("room_prefix", "eval"),
+        data_topic=lk.get("data_topic", "text"),
+        response_timeout=float(lk.get("response_timeout", 30.0)),
+        agent_join_timeout=float(lk.get("agent_join_timeout", 30.0)),
+        agent_backend=lk.get("agent_backend", "none"),
+    )
 
     return Config(
         assistant=AssistantConfig(
@@ -203,9 +242,12 @@ def load_config(path: str | None = None) -> Config:
             save_transcripts=out.get("save_transcripts", True),
             graphs=out.get("graphs", True),
         ),
+        livekit=livekit_cfg,
         provider=provider,
         anthropic_api_key=anthropic_key,
         vapi_api_key=vapi_key,
         smallest_api_key=smallest_key,
         elevenlabs_api_key=elevenlabs_key,
+        livekit_api_key=livekit_api_key,
+        livekit_api_secret=livekit_api_secret,
     )
